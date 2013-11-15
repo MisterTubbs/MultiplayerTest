@@ -6,7 +6,7 @@ import com.nishu.mp.game.GameServer;
 public abstract class Packet {
 
 	public static enum PacketTypes {
-		INVALID(-1), LOGIN(00), DISCONNECT(01), MESSAGE(02);
+		INVALID(-1), LOGIN(00), DISCONNECT(01), MESSAGE(02), ADDPLAYER(03);
 
 		private int ID;
 

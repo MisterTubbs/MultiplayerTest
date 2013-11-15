@@ -68,5 +68,9 @@ public class Player {
 	public void dispose() {
 		glDeleteBuffers(vID);
 	}
+	
+	public Vector2f getPos(){
+		return pos;
+	}
 
 }

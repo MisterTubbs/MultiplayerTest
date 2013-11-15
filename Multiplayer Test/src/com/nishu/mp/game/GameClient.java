@@ -23,6 +23,7 @@ import com.nishu.mp.game.entity.Player;
 import com.nishu.mp.game.net.Packet;
 import com.nishu.mp.game.net.Packet01Disconnect;
 import com.nishu.mp.game.net.Packet02Message;
+import com.nishu.mp.game.net.Packet03AddPlayer;
 
 public class GameClient extends Thread {
 
@@ -58,6 +59,8 @@ public class GameClient extends Thread {
 
 	public void init() {
 		players.add(new Player((float) Math.random() * 32, (float) Math.random() * 32, 64));
+		Packet03AddPlayer addPlayer = new Packet03AddPlayer(String.valueOf(players.get(0).getPos()));
+		addPlayer.writeData(this);
 	}
 
 	public void updateWindow() {
@@ -76,9 +79,8 @@ public class GameClient extends Thread {
 			byte[] data = new byte[1024];
 			DatagramPacket packet = new DatagramPacket(data, data.length);
 			try {
-				if (socket.isConnected()) {
-					this.socket.receive(packet);
-				}
+				System.out.println("waiting to recieve");
+				this.socket.receive(packet);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -89,6 +91,7 @@ public class GameClient extends Thread {
 
 	private void parsePacket(byte[] data, InetAddress address, int port) {
 		String message = new String(data).trim();
+		System.out.println(message);
 		Packet.PacketTypes type = Packet.lookupPacket(message.substring(0, 2));
 		switch (type) {
 		case INVALID:
@@ -97,6 +100,9 @@ public class GameClient extends Thread {
 			Packet02Message packetMessage = new Packet02Message(data);
 			System.out.println(packetMessage.getMessage());
 			break;
+		case ADDPLAYER:
+			Packet03AddPlayer addPlayer = new Packet03AddPlayer(data);
+			players.add(new Player(Float.valueOf(addPlayer.getPlayer().charAt(0)), Float.valueOf(addPlayer.getPlayer().charAt(1)), 64));
 		default:
 			break;
 		}

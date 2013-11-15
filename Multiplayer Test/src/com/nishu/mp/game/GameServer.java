@@ -13,12 +13,13 @@ import com.nishu.mp.game.net.Packet;
 import com.nishu.mp.game.net.Packet00Login;
 import com.nishu.mp.game.net.Packet01Disconnect;
 import com.nishu.mp.game.net.Packet02Message;
+import com.nishu.mp.game.net.Packet03AddPlayer;
 
 public class GameServer extends Thread {
 	private DatagramSocket socket;
 	private List<GameClient> clients = new ArrayList<GameClient>();
 
-	private boolean running = false;
+	private volatile boolean running = false;
 
 	public GameServer() {
 		try {
@@ -40,8 +41,6 @@ public class GameServer extends Thread {
 			}
 			parsePacket(packet.getData(), packet.getAddress(), packet.getPort());
 		}
-
-		dispose();
 	}
 
 	private void parsePacket(byte[] data, InetAddress address, int port) {
@@ -68,6 +67,9 @@ public class GameServer extends Thread {
 			GameClient c = new GameClient(address.toString().substring(1), login.getUsername());
 			clients.add(c);
 			break;
+		case ADDPLAYER:
+			Packet03AddPlayer addPlayer = new Packet03AddPlayer(data);
+			sendDataToAllClients(addPlayer.getData());
 		default:
 			break;
 		}
@@ -82,6 +84,12 @@ public class GameServer extends Thread {
 		return -1;
 	}
 
+	public void sendDataToAllClientsExcept(byte[] data, InetAddress ip){
+		for(int i = 0; i < clients.size(); i++){
+			if(clients.get(i).ip != ip) sendData(data, clients.get(i).ip, clients.get(i).port);
+		}
+	}
+	
 	public void sendDataToAllClients(byte[] data) {
 		for (GameClient c : this.clients) {
 			sendData(data, c.ip, c.port);
