@@ -1,83 +1,61 @@
 package com.nishu.mp;
 
-import static org.lwjgl.opengl.GL11.GL_MODELVIEW;
-import static org.lwjgl.opengl.GL11.GL_PROJECTION;
-import static org.lwjgl.opengl.GL11.glLoadIdentity;
-import static org.lwjgl.opengl.GL11.glMatrixMode;
-import static org.lwjgl.opengl.GL11.glOrtho;
-import static org.lwjgl.opengl.GL11.glViewport;
-
-import org.lwjgl.opengl.Display;
-
 import com.nishu.mp.game.GameClient;
-import com.nishu.mp.game.GameServer;
+import com.nishu.mp.game.net.Packet00Login;
 
 public class Main {
-	
+
 	public static final int WIDTH = 1280;
 	public static final int HEIGHT = 720;
-	
 	private boolean running = false;
-	
-	GameClient client;
-	GameServer server;
 
-	public Main(){
-		running = false;
-		
-		initGL();
+	GameClient client;
+
+	public Main() {
+		this.running = false;
 		init();
 	}
 
-	private void initGL(){
-		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();
-		
-		glMatrixMode(GL_MODELVIEW);
-		glOrtho(0, WIDTH, HEIGHT, 0, 1, -1);
-		glViewport(0, 0, Display.getWidth(), Display.getHeight());
+	private void init() {
+		client = new GameClient("localhost", "Mister Tubbs");
+		client.initGL();
+		client.init();
+		GameClient.running = true;
+		client.start();
+		Packet00Login p = new Packet00Login("Mister Tubbs");
+		p.writeData(client);
 	}
 
-	private void init(){
-		client = new GameClient("localhost");
-		client.start();
-		client.sendData("Ping".getBytes());
-	}
-	
-	private void start(){
-		if(running) return;
+	private void start() {
+		if (running)
+			return;
 		running = true;
 		run();
 	}
-	
-	private void run(){
-		while(!Window.closed() && running){
+
+	private void run() {
+		while (running) {
 			update();
 			render();
 		}
 		stop();
 	}
-	
-	private void update(){
-		Window.update();
+
+	private void update() {
+		if (GameClient.running) {
+			client.updateWindow();
+		}
 	}
 
-	private void render(){
+	private void render() {
 	}
-	
-	private void stop(){
-		if(!running) return;
+
+	private void stop() {
+		if (!running) return;
 		running = false;
-		dispose();
 	}
 
-	private void dispose(){
-		Window.dispose();
-		client.dispose();
-	}
-	
-	public static void main(String[] args){
-		Window.createWindow(WIDTH, HEIGHT);
+	public static void main(String[] args) {
 		Main main = new Main();
 		main.start();
 	}
