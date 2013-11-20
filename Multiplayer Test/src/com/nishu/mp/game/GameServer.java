@@ -45,6 +45,7 @@ public class GameServer extends Thread {
 
 	private void parsePacket(byte[] data, InetAddress address, int port) {
 		String message = new String(data).trim();
+		System.out.println(address +  " | " + port + " | " + message);
 		Packet.PacketTypes type = Packet.lookupPacket(message.substring(0, 2));
 		switch (type) {
 		case INVALID:
@@ -52,14 +53,14 @@ public class GameServer extends Thread {
 		case DISCONNECT:
 			Packet01Disconnect disconnect = new Packet01Disconnect(data);
 			System.out.println(disconnect.getUsername() + " Has Left");
+			Packet02Message disconnectMessage = new Packet02Message(disconnect.getUsername() + " Has Left");
+			sendData(disconnectMessage.getData(), address, port);
 			int index = getClientIndex(disconnect.getUsername());
 			if (index != -1)
 				clients.remove(index);
 			else {
 				System.err.println("Error Removing Client at: " + index);
 			}
-			Packet02Message disconnectMessage = new Packet02Message(disconnect.getUsername() + " Has Left");
-			disconnectMessage.writeData(this);
 			break;
 		case LOGIN:
 			Packet00Login login = new Packet00Login(data);
@@ -86,13 +87,13 @@ public class GameServer extends Thread {
 
 	public void sendDataToAllClientsExcept(byte[] data, InetAddress ip){
 		for(int i = 0; i < clients.size(); i++){
-			if(clients.get(i).ip != ip) sendData(data, clients.get(i).ip, clients.get(i).port);
+			if(clients.get(i).address != ip) sendData(data, clients.get(i).address, clients.get(i).port);
 		}
 	}
 	
 	public void sendDataToAllClients(byte[] data) {
 		for (GameClient c : this.clients) {
-			sendData(data, c.ip, c.port);
+			sendData(data, c.address, c.port);
 		}
 	}
 

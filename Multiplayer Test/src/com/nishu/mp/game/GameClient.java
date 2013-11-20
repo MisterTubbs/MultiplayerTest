@@ -27,24 +27,24 @@ import com.nishu.mp.game.net.Packet03AddPlayer;
 
 public class GameClient extends Thread {
 
-	public InetAddress ip;
+	public InetAddress address;
 	public DatagramSocket socket;
 	private List<Player> players = new ArrayList<Player>();
 
 	public int port = 1333;
 
 	private String username;
+	public String ip;
 
 	public static boolean running = false;
 
 	public GameClient(String ip, String username) {
+		this.username = username;
 		try {
-			this.socket = new DatagramSocket();
-			this.ip = InetAddress.getByName(ip);
-		} catch (java.net.UnknownHostException | SocketException e) {
+			this.address = InetAddress.getByName(ip);
+		} catch (java.net.UnknownHostException e) {
 			e.printStackTrace();
 		}
-		this.username = username;
 	}
 
 	public void initGL() {
@@ -58,9 +58,14 @@ public class GameClient extends Thread {
 	}
 
 	public void init() {
+		try{
+			this.socket = new DatagramSocket();
+		}catch(SocketException e){
+			e.printStackTrace();
+		}
 		players.add(new Player((float) Math.random() * 32, (float) Math.random() * 32, 64));
-		Packet03AddPlayer addPlayer = new Packet03AddPlayer(String.valueOf(players.get(0).getPos()));
-		addPlayer.writeData(this);
+		//Packet03AddPlayer addPlayer = new Packet03AddPlayer(String.valueOf(players.get(0).getPos()));
+		//addPlayer.writeData(this);
 	}
 
 	public void updateWindow() {
@@ -75,23 +80,20 @@ public class GameClient extends Thread {
 	}
 
 	public void run() {
-		while (!socket.isClosed()) {
+		while (true) {
 			byte[] data = new byte[1024];
 			DatagramPacket packet = new DatagramPacket(data, data.length);
 			try {
-				System.out.println("waiting to recieve");
 				this.socket.receive(packet);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
 			parsePacket(packet.getData(), packet.getAddress(), packet.getPort());
 		}
-		dispose();
 	}
 
 	private void parsePacket(byte[] data, InetAddress address, int port) {
 		String message = new String(data).trim();
-		System.out.println(message);
 		Packet.PacketTypes type = Packet.lookupPacket(message.substring(0, 2));
 		switch (type) {
 		case INVALID:
@@ -109,7 +111,7 @@ public class GameClient extends Thread {
 	}
 
 	public void sendData(byte[] data) {
-		DatagramPacket packet = new DatagramPacket(data, data.length, this.ip, this.port);
+		DatagramPacket packet = new DatagramPacket(data, data.length, this.address, this.port);
 		try {
 			this.socket.send(packet);
 		} catch (IOException e) {

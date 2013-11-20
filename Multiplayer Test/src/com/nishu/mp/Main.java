@@ -1,5 +1,7 @@
 package com.nishu.mp;
 
+import java.util.Scanner;
+
 import com.nishu.mp.game.GameClient;
 import com.nishu.mp.game.net.Packet00Login;
 
@@ -11,18 +13,18 @@ public class Main {
 
 	GameClient client;
 
-	public Main() {
+	public Main(String name) {
 		this.running = false;
-		init();
+		init(name);
 	}
 
-	private void init() {
-		client = new GameClient("localhost", "Mister Tubbs");
+	private void init(String name) {
+		client = new GameClient("localhost", name);
 		client.initGL();
 		client.init();
 		GameClient.running = true;
 		client.start();
-		Packet00Login p = new Packet00Login("Mister Tubbs");
+		Packet00Login p = new Packet00Login(name);
 		p.writeData(client);
 	}
 
@@ -56,7 +58,11 @@ public class Main {
 	}
 
 	public static void main(String[] args) {
-		Main main = new Main();
+		Scanner scan = new Scanner(System.in);
+		System.out.println("Enter a name: ");
+		String name = scan.nextLine();
+		scan.close();
+		Main main = new Main(name);
 		main.start();
 	}
 }
